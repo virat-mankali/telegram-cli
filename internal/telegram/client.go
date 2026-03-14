@@ -17,8 +17,9 @@ import (
 
 // ClientOptions holds configuration for creating a Telegram client.
 type ClientOptions struct {
-	SessionPath string
-	Logger      *zap.Logger
+	SessionPath   string
+	Logger        *zap.Logger
+	UpdateHandler telegram.UpdateHandler
 }
 
 // AppCredentials returns app ID and hash from env vars, falling back to
@@ -48,12 +49,17 @@ func NewClient(opts ClientOptions) *telegram.Client {
 		logger = zap.NewNop()
 	}
 
-	return telegram.NewClient(appID, appHash, telegram.Options{
+	tgOpts := telegram.Options{
 		SessionStorage: &session.FileStorage{Path: opts.SessionPath},
 		Logger:         logger,
 		Middlewares: []telegram.Middleware{
 			floodwait.NewSimpleWaiter().WithMaxRetries(10),
 			ratelimit.New(rate.Every(100*time.Millisecond), 5),
 		},
-	})
+	}
+	if opts.UpdateHandler != nil {
+		tgOpts.UpdateHandler = opts.UpdateHandler
+	}
+
+	return telegram.NewClient(appID, appHash, tgOpts)
 }

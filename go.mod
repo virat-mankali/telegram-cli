@@ -3,6 +3,7 @@ module github.com/virat-mankali/telegram-cli
 go 1.25.0
 
 require (
+	github.com/fatih/color v1.18.0
 	github.com/gotd/contrib v0.21.1
 	github.com/gotd/td v0.141.0
 	github.com/spf13/cobra v1.10.2
@@ -18,7 +19,6 @@ require (
 	github.com/coder/websocket v1.8.14 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/fatih/color v1.18.0 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/go-faster/errors v0.7.1 // indirect
 	github.com/go-faster/jx v1.2.0 // indirect

@@ -2,8 +2,13 @@ package main
 
 import (
 	"fmt"
+	"time"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+
+	"github.com/virat-mankali/telegram-cli/internal/config"
+	"github.com/virat-mankali/telegram-cli/internal/storage"
 )
 
 var (
@@ -17,9 +22,35 @@ var searchCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		query := args[0]
-		fmt.Printf("Searching for %q (limit: %d, store: %s)\n", query, searchLimit, storeDir)
-		// Phase 4: SQLite FTS5 query will be wired here.
-		fmt.Println("Not yet implemented. Coming in Phase 4.")
+		dbPath := config.DBPath(storeDir)
+
+		db, err := storage.InitDB(dbPath)
+		if err != nil {
+			return fmt.Errorf("init db: %w", err)
+		}
+		defer db.Close()
+
+		results, err := storage.SearchMessages(db, query, searchLimit)
+		if err != nil {
+			return fmt.Errorf("search: %w", err)
+		}
+
+		if len(results) == 0 {
+			fmt.Printf("No results for %q\n", query)
+			return nil
+		}
+
+		bold := color.New(color.Bold)
+		dim := color.New(color.FgHiBlack)
+		cyan := color.New(color.FgCyan)
+
+		fmt.Printf("Found %d result(s) for %q:\n\n", len(results), query)
+		for _, m := range results {
+			ts := m.Timestamp.Format(time.DateTime)
+			dim.Printf("  %s  ", ts)
+			cyan.Printf("[%s] ", m.Sender)
+			bold.Println(m.Text)
+		}
 		return nil
 	},
 }
