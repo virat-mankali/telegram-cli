@@ -1,65 +1,64 @@
-# tgcli — Telegram CLI
+# ✈️ tgcli — Telegram CLI: sync, search, send.
 
-A blazing-fast, terminal-based Telegram client built on MTProto. Authenticate as a real user, sync messages locally, search offline, and send messages or media directly from the command line.
+Telegram CLI built on top of `gotd/td` (MTProto), focused on:
 
-Inspired by [steipete/wacli](https://github.com/steipete/wacli) (WhatsApp CLI).
+- Best-effort local sync of message history + continuous capture
+- Fast offline full-text search (SQLite FTS5)
+- Sending text messages and media files
+- Single binary, no CGO, cross-platform
 
-## Installation
+Acts as a real Telegram **user** via MTProto — not a bot. Inspired by [steipete/wacli](https://github.com/steipete/wacli).
 
-### Homebrew (macOS & Linux)
+---
+
+## Install
+
+### Option A: Homebrew (macOS & Linux)
 
 ```bash
 brew install virat-mankali/tap/tgcli
 ```
 
-### Download Binary
-
-Grab the latest release for your platform from the [Releases page](https://github.com/virat-mankali/telegram-cli/releases).
-
-### Build from Source
+### Option B: Build from source
 
 ```bash
 git clone https://github.com/virat-mankali/telegram-cli.git
 cd telegram-cli
 go build -o tgcli ./cmd/tgcli/
+./tgcli --help
 ```
 
 ---
 
-## Getting Started
+## Quick Start
 
-### 1. Get Your Telegram API Credentials
-
-1. Go to https://my.telegram.org/apps
-2. Log in with your phone number
-3. Create a new application (any name works, e.g., "tgcli")
-4. Copy your `api_id` and `api_hash`
-
-### 2. Set Environment Variables
+Default store directory is `~/.tgcli` (override with `--store DIR`).
 
 ```bash
+# 1) Get your API credentials at https://my.telegram.org/apps
 export TGCLI_APP_ID=your_api_id
 export TGCLI_APP_HASH=your_api_hash
-```
 
-### 3. Authenticate
+# 2) Authenticate (prompts for phone + code + optional 2FA)
+tgcli auth
 
-```bash
-go run ./cmd/tgcli/ auth
-```
+# 3) Sync incoming messages into local DB
+tgcli sync
 
-You'll be prompted for:
-1. **Phone number** (e.g., `+1234567890`)
-2. **Verification code** (sent via SMS or Telegram app)
-3. **2FA password** (if enabled — input is hidden)
+# 4) Keep syncing in real-time (like tail -f)
+tgcli sync --follow
 
-Session is saved to `~/.tgcli/session.json`. Subsequent commands skip re-authentication automatically.
+# 5) Search messages offline
+tgcli search "meeting"
+tgcli search "hello" --limit 50
 
-### 4. Build the Binary
+# 6) Send a text message
+tgcli send --to @username --text "Hey!"
+tgcli send --to +1234567890 --text "Hello"
 
-```bash
-go build -o tgcli ./cmd/tgcli/
-./tgcli --help
+# 7) Send a file
+tgcli send --to @username --media /path/to/file.pdf
+tgcli send --to @username --media /path/to/photo.jpg --text "Check this out"
 ```
 
 ---
@@ -67,71 +66,78 @@ go build -o tgcli ./cmd/tgcli/
 ## Commands
 
 ### `tgcli auth`
-Authenticate with your Telegram account.
+Authenticate with your Telegram account. Prompts for phone number, verification code, and 2FA password if enabled. Session is saved to `~/.tgcli/session.json` — subsequent commands skip re-auth automatically.
 
 ```bash
 tgcli auth
 tgcli auth --phone +1234567890
 ```
 
----
-
 ### `tgcli sync`
 Connect to Telegram and sync incoming messages into the local SQLite database.
 
 ```bash
-tgcli sync                  # connect and exit
-tgcli sync --follow         # keep running, capture messages in real-time (like tail -f)
+tgcli sync             # connect, confirm auth, exit
+tgcli sync --follow    # keep running, capture messages in real-time
 ```
 
----
-
 ### `tgcli search <query>`
-Full-text search across all locally synced messages using SQLite FTS5. Works completely offline.
+Full-text search across all locally synced messages. Works completely offline.
 
 ```bash
-tgcli search "meeting"
-tgcli search "hello" --limit 50
+tgcli search "standup"
+tgcli search "invoice" --limit 100
 ```
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--limit` | `20` | Max number of results to return |
-
----
+| `--limit` | `20` | Max results to return |
 
 ### `tgcli send`
-Send a text message or media file to any Telegram user, group, or channel.
+Send a text message or media file to any user, group, or channel.
 
 ```bash
-# Text message
 tgcli send --to @username --text "Hello!"
-tgcli send --to +1234567890 --text "Hey there"
-
-# Send media
-tgcli send --to @username --media /path/to/file.png
 tgcli send --to +1234567890 --media /path/to/audio.mp3
-
-# Send media with a follow-up text
 tgcli send --to @username --media /path/to/doc.pdf --text "Here's the file"
 ```
 
 | Flag | Description |
 |------|-------------|
-| `--to` | Recipient — `@username`, phone number (`+1234567890`), or `t.me/` link |
-| `--text` | Text message to send |
-| `--media` | Path to a local file to upload and send |
+| `--to` | Recipient — `@username`, `+phone`, or `t.me/` link |
+| `--text` | Text message |
+| `--media` | Path to a local file to upload |
 
-#### Supported Media Types
+#### Supported media types
 
 | Category | Extensions | Sent as |
 |----------|-----------|---------|
-| **Images** | `.jpg`, `.jpeg`, `.png`, `.webp` | Photo (inline preview) |
-| **Audio** | `.mp3`, `.ogg`, `.flac`, `.wav`, `.m4a`, `.aac` | Audio player |
-| **Video** | `.mp4`, `.mov`, `.avi`, `.mkv`, `.webm` | Video player |
-| **Documents** | `.pdf`, `.zip`, `.docx`, `.xlsx`, `.txt`, and any other file type | Generic document |
+| Images | `.jpg` `.jpeg` `.png` `.webp` | Photo (inline preview) |
+| Audio | `.mp3` `.ogg` `.flac` `.wav` `.m4a` `.aac` | Audio player |
+| Video | `.mp4` `.mov` `.avi` `.mkv` `.webm` | Video player |
+| Documents | anything else (`.pdf` `.zip` `.docx` …) | Generic document |
 
-Any file type not in the image/audio/video lists is sent as a generic document (e.g. PDFs, archives, spreadsheets, code files, etc.).
+---
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `TGCLI_APP_ID` | Your Telegram API ID from [my.telegram.org/apps](https://my.telegram.org/apps) |
+| `TGCLI_APP_HASH` | Your Telegram API hash |
+
+Falls back to `gotd` test credentials if unset — not recommended for production use.
+
+---
+
+## Storage
+
+Defaults to `~/.tgcli` (override with `--store DIR`).
+
+| File | Purpose |
+|------|---------|
+| `~/.tgcli/session.json` | MTProto session (0600 permissions) |
+| `~/.tgcli/data.db` | SQLite database with FTS5 message index |
 
 ---
 
@@ -146,71 +152,39 @@ tgcli/
 │   ├── sync.go         # tgcli sync
 │   ├── send.go         # tgcli send
 │   ├── search.go       # tgcli search
-│   └── helpers.go      # Shared utilities (sender resolution, truncation)
+│   └── helpers.go      # Shared utilities
 ├── internal/
 │   ├── config/         # Path helpers (~/.tgcli)
-│   ├── telegram/       # MTProto client wrapper
-│   │   ├── client.go
-│   │   └── auth.go
+│   ├── telegram/       # MTProto client wrapper (gotd/td)
 │   └── storage/        # SQLite + FTS5
-│       ├── db.go
-│       ├── session.go
-│       └── messages.go
-├── .goreleaser.yaml    # GoReleaser config (cross-compile + Homebrew)
+├── .goreleaser.yaml    # Cross-platform build + Homebrew tap
 ├── .github/workflows/
-│   └── release.yml     # GitHub Actions: auto-release on tag push
+│   └── release.yml     # Auto-release on git tag push
 ├── go.mod
 └── README.md
 ```
 
 ---
 
-## Dependencies
-
-| Package | Purpose |
-|---------|---------|
-| `github.com/gotd/td` | Telegram MTProto API (core) |
-| `github.com/gotd/contrib` | Flood wait & rate limit middleware |
-| `github.com/spf13/cobra` | CLI framework |
-| `modernc.org/sqlite` | Pure-Go SQLite driver (no CGO) |
-| `github.com/fatih/color` | Colorized terminal output |
-| `golang.org/x/term` | Secure password input (no echo) |
-
----
-
-## Implementation Phases
-
-- **Phase 1** ✅ — Project setup & CLI routing (Cobra)
-- **Phase 2** ✅ — Telegram client & authentication (gotd/td)
-- **Phase 3** ✅ — Local storage & SQLite FTS5
-- **Phase 4** ✅ — Core features: sync, search, send + media upload
-- **Phase 5** ✅ — Build & distribution (GoReleaser + Homebrew tap)
-
----
-
 ## Releasing
 
-Tag a new version and push — GitHub Actions handles the rest:
+Tag a version and push — GitHub Actions handles the rest:
 
 ```bash
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
-This triggers GoReleaser which builds binaries for macOS/Linux/Windows (amd64 + arm64), creates a GitHub Release with checksums, and updates the Homebrew tap.
-
-To set up the Homebrew tap integration, add a `TAP_GITHUB_TOKEN` secret to your repo (a GitHub PAT with `repo` scope on `virat-mankali/homebrew-tap`).
+GoReleaser builds binaries for macOS/Linux/Windows (amd64 + arm64), creates a GitHub Release with checksums, and updates the Homebrew formula automatically.
 
 ---
 
-## Notes
+## Prior Art / Credit
 
-- **Session file**: `~/.tgcli/session.json` — 0600 permissions (owner only)
-- **Database**: `~/.tgcli/data.db` — SQLite with FTS5 for offline search
-- **Data directory**: Override with `--store /path/to/dir`
-- **Flood wait**: Automatically retried up to 10 times via middleware
-- **Test credentials**: Falls back to gotd test credentials if env vars are not set — not recommended for production use
+Heavily inspired by [steipete/wacli](https://github.com/steipete/wacli) — a WhatsApp CLI built on `whatsmeow`. Same philosophy, different protocol.
+
+---
 
 ## License
 
-See LICENSE file.
+See `LICENSE`.
