@@ -4,6 +4,28 @@ A blazing-fast, terminal-based Telegram client built on MTProto. Authenticate as
 
 Inspired by [steipete/wacli](https://github.com/steipete/wacli) (WhatsApp CLI).
 
+## Installation
+
+### Homebrew (macOS & Linux)
+
+```bash
+brew install virat-mankali/tap/tgcli
+```
+
+### Download Binary
+
+Grab the latest release for your platform from the [Releases page](https://github.com/virat-mankali/telegram-cli/releases).
+
+### Build from Source
+
+```bash
+git clone https://github.com/virat-mankali/telegram-cli.git
+cd telegram-cli
+go build -o tgcli ./cmd/tgcli/
+```
+
+---
+
 ## Getting Started
 
 ### 1. Get Your Telegram API Credentials
@@ -134,6 +156,9 @@ tgcli/
 │       ├── db.go
 │       ├── session.go
 │       └── messages.go
+├── .goreleaser.yaml    # GoReleaser config (cross-compile + Homebrew)
+├── .github/workflows/
+│   └── release.yml     # GitHub Actions: auto-release on tag push
 ├── go.mod
 └── README.md
 ```
@@ -159,7 +184,22 @@ tgcli/
 - **Phase 2** ✅ — Telegram client & authentication (gotd/td)
 - **Phase 3** ✅ — Local storage & SQLite FTS5
 - **Phase 4** ✅ — Core features: sync, search, send + media upload
-- **Phase 5** — Build & distribution (GoReleaser + Homebrew tap)
+- **Phase 5** ✅ — Build & distribution (GoReleaser + Homebrew tap)
+
+---
+
+## Releasing
+
+Tag a new version and push — GitHub Actions handles the rest:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+This triggers GoReleaser which builds binaries for macOS/Linux/Windows (amd64 + arm64), creates a GitHub Release with checksums, and updates the Homebrew tap.
+
+To set up the Homebrew tap integration, add a `TAP_GITHUB_TOKEN` secret to your repo (a GitHub PAT with `repo` scope on `virat-mankali/homebrew-tap`).
 
 ---
 
