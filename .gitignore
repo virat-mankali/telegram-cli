@@ -1,0 +1,29 @@
+# Binaries
+/dist/
+/tgcli
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Go build cache
+.cache/
+*.o
+*.a
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local data
+.tgcli/
+*.db
+*.db-shm
+*.db-wal
