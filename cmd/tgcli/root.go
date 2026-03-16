@@ -43,6 +43,7 @@ func init() {
 	rootCmd.AddCommand(syncCmd)
 	rootCmd.AddCommand(sendCmd)
 	rootCmd.AddCommand(searchCmd)
+	rootCmd.AddCommand(serveCmd)
 }
 
 // Execute runs the root command with graceful signal handling.
