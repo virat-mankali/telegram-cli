@@ -271,4 +271,4 @@ Heavily inspired by [steipete/wacli](https://github.com/steipete/wacli) — a Wh
 
 ## License
 
-See `LICENSE`..
+See `LICENSE`.
